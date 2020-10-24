@@ -2,6 +2,8 @@
 copy to /etc/bash_completion.d and restart your shell session
 
 supported Decred daemons: 
+dcrd
+dcrwallet
 dcrctl
 dexcctl
 
