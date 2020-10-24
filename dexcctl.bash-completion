@@ -1,0 +1,50 @@
+# bash programmable completion for dexcctl
+# copy to /etc/bash_completion.d and restart your shell session
+# Copyright (c) by Andreas M. Antonopoulos
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_dexcctl() {
+    local cur prev words=() cword
+    local dexcctl
+
+    # dexcctl might not be in $PATH
+    dexcctl="$1"
+
+    COMPREPLY=()
+    _get_comp_words_by_ref -n = cur prev words cword
+
+    case "$cur" in
+        -*=*)	# prevent nonsense completions
+            return 0
+            ;;
+        *)
+            local helpopts globalcmds
+
+            # get the global options, starting with -
+            if [[ "$cur" =~ ^- ]]; then
+                globalcmds=$($dexcctl -h 2>&1 | awk '$1 ~ /^-[a-zA-Z]/ { sub(/,/, ""); print $1}')
+            fi
+
+            # get the global options, starting with --
+            if [[ "$cur" =~ ^-- ]]; then
+                globalcmds=$($dexcctl -h 2>&1 | awk '$1 ~ /^--/ { sub(/,/, ""); print $1}'; dexcctl -h 2>&1 | awk '$2 ~ /^--/ { sub(/,/, ""); print $2}')
+            fi
+
+            # get the regular commands
+            if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
+                helpopts=$($dexcctl -l 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }' )
+            fi
+
+            COMPREPLY=( $( compgen -W "$helpopts $globalcmds" -X "*," -- "$cur" ) )
+    esac
+} &&
+complete -F _dexcctl dexcctl
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh
